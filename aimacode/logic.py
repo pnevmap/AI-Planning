@@ -71,6 +71,9 @@ class KB:
         "Remove sentence from the KB."
         raise NotImplementedError
 
+    def has(self, query):
+        """Return whether a substitution exists."""
+        return self.ask(query) is not False
 
 class PropKB(KB):
     """A KB for propositional logic. Inefficient, with no indexing. """
