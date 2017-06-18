@@ -177,10 +177,7 @@ class AirCargoProblem(Problem):
         """
         kb = PropKB()
         kb.tell(decode_state(state, self.state_map).pos_sentence())
-        for clause in self.goal:
-            if clause not in kb.clauses:
-                return False
-        return True
+        return all(kb.ask(clause) is not False for clause in self.goal)
 
     def h_1(self, node: Node):
         # note that this is not a true heuristic
@@ -207,14 +204,9 @@ class AirCargoProblem(Problem):
         executed.
         """
         # implement (see Russell-Norvig Ed-3 10.2.3  or Russell-Norvig Ed-2 11.2)
-        count = 0
         kb = PropKB()
         kb.tell(decode_state(node.state, self.state_map).pos_sentence())
-        for clause in self.goal:
-            if clause not in kb.clauses:
-                count += 1
-
-        return count
+        return sum([1 if kb.ask(clause) is False else 0 for clause in self.goal])
 
 
 def air_cargo_p1() -> AirCargoProblem:
