@@ -92,7 +92,7 @@ class AirCargoProblem(Problem):
                         effect_add = [expr("At({}, {})".format(c, a)), ]
                         effect_rem = [expr("In({}, {})".format(c, p)), ]
                         unload = Action(expr("Unload({}, {}, {})".
-                                        format(c, p, a)),
+                                             format(c, p, a)),
                                         [precond_pos, precond_neg],
                                         [effect_add, effect_rem])
                         unloads.append(unload)
@@ -129,21 +129,20 @@ class AirCargoProblem(Problem):
             e.g. 'FTTTFF'
         :return: list of Action objects
         """
-        # implement
-        possible_actions = []
+        legal_actions = []
         kb = PropKB()
         kb.tell(decode_state(state, self.state_map).pos_sentence())
         for action in self.actions_list:
-            is_possible = True
+            is_legal = True
             for clause in action.precond_pos:
                 if clause not in kb.clauses:
-                    is_possible = False
+                    is_legal = False
             for clause in action.precond_neg:
                 if clause in kb.clauses:
-                    is_possible = False
-            if is_possible:
-                possible_actions.append(action)
-        return possible_actions
+                    is_legal = False
+            if is_legal:
+                legal_actions.append(action)
+        return legal_actions
 
     def result(self, state: str, action: Action):
         """ Return the state that results from executing the given
@@ -154,20 +153,20 @@ class AirCargoProblem(Problem):
         :param action: Action applied
         :return: resulting state after action
         """
-        # implement
         new_state = FluentState([], [])
-
-        current_pos = decode_state(state, self.state_map).pos
-        current_neg = decode_state(state, self.state_map).neg
-
-        for pos in action.effect_add:
-            current_pos.append(pos)
-            current_neg.remove(pos)
-        for rem in action.effect_rem:
-            current_pos.remove(rem)
-            current_neg.append(rem)
-
-        new_state = FluentState(current_pos, current_neg)
+        old_state = decode_state(state, self.state_map)
+        for fluent in old_state.pos:
+            if fluent not in action.effect_rem:
+                new_state.pos.append(fluent)
+        for fluent in action.effect_add:
+            if fluent not in new_state.pos:
+                new_state.pos.append(fluent)
+        for fluent in old_state.neg:
+            if fluent not in action.effect_add:
+                new_state.neg.append(fluent)
+        for fluent in action.effect_rem:
+            if fluent not in new_state.neg:
+                new_state.neg.append(fluent)
         return encode_state(new_state, self.state_map)
 
     def goal_test(self, state: str) -> bool:
@@ -283,6 +282,7 @@ def air_cargo_p2() -> AirCargoProblem:
             expr('At(C3, SFO)'),
             ]
     return AirCargoProblem(cargos, planes, airports, init, goal)
+
 
 def air_cargo_p3() -> AirCargoProblem:
     # implement Problem 3 definition
